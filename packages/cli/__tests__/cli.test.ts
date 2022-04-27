@@ -1,16 +1,12 @@
-import { exec } from 'child_process'
+import * as childPromise from 'child_process'
 import { promisify } from 'util'
-const execAsync = promisify(exec)
+
+const execAsync = promisify(childPromise.exec)
 
 describe('cli', () => {
   it('prints help', async () => {
-    let output = ''
-    try {
-      await execAsync('yarn ee')
-    } catch ({ stderr }) {
-      output = stderr as string
-    }
-    expect(output).toBe(`Usage: index.js <command> [options]
+    const output = await exec('yarn ee')
+    expect(output).toContain(`Usage: index.js <command> [options]
 
 Commands:
   index.js new <directory>                       Create a new exam
@@ -22,10 +18,18 @@ Commands:
 
 Options:
   --help     Show help  [boolean]
-  --version  Show version number  [boolean]
-
-Not enough non-option arguments: got 0, need at least 1
-[2K[1G[31merror[39m Command failed with exit code 1.
-`)
+  --version  Show version number  [boolean]`)
+  })
+  it('creates transfer.zip', async () => {
+    const output = await exec('yarn ee create-transfer-zip packages/exams/SC/SC.xml')
+    expect(output).toContain(`Done in `)
   })
 })
+
+const exec = async (cmd: string) => {
+  try {
+    return (await execAsync(cmd)).stdout
+  } catch ({ stderr }) {
+    return stderr
+  }
+}
